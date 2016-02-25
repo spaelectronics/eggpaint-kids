@@ -8,7 +8,7 @@ static void DrawButtons(PGraphics buffer) {
     return;
   }
 
-  for (int i = buttonList.size()-1; i >= 0; i--) { 
+  for (int i = buttonList.size()-1; i >= 0; i--) {
     SimpleButton button = (SimpleButton) buttonList.get(i);
     button.draw(buffer);
   }

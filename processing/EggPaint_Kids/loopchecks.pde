@@ -25,13 +25,15 @@ void checkServiceBrush() {
         if ((ToDoList.length <= (indexDone + 1))   && (replayIsRunning == true))
         {
           replayIsRunning = false;
+          printButton.displayColor = TextColor;
+          printButton.highlightColor = TextHighLight;
           printButton.label = "Print Egg";
           redrawButtons();
         }
         
-        if ((ToDoList.length <= (indexDone + 1))   && (clearButtonActive == true))
+        if ((ToDoList.length <= (indexDone + 1))   && (clearIsRunning == true))
         {
-          clearButtonActive = false;
+          clearIsRunning = false;
           pause();
         }
       }

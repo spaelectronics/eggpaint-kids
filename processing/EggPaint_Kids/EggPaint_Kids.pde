@@ -170,7 +170,7 @@ int ToDoList[];  // Queue future events in an integer array; executed when Prior
 int indexDone;    // Index in to-do list of last action performed
 int indexDrawn;   // Index in to-do list of last to-do element drawn to screen
 boolean replayIsRunning;
-boolean clearButtonActive;
+boolean clearIsRunning;
 
 
 // Active buttons
@@ -337,7 +337,7 @@ void setup()
   Paused = true;
   BrushDownAtPause = false;
   replayIsRunning = false;
-  clearButtonActive = false;
+  clearIsRunning = false;
 
   // Set initial position of indicator at carriage minimum 0,0
   int[] pos = getMotorPixelPos();
@@ -889,7 +889,7 @@ void mousePressed() {
   else if ( clearButton.isSelected() )
   {  // ***** CLEAR ALL *****
   
-    clearButtonActive = true;
+    clearIsRunning = true;
   
     selectedColor = 8; // No color selected
     brushColor = 8; // No paint on brush yet.  Use value 8, "water"
@@ -916,6 +916,8 @@ void mousePressed() {
     
     replayIsRunning = true;
     printButton.label = "Printing...";
+    printButton.displayColor = color(200, 0, 0);
+    printButton.highlightColor = color(200, 0, 0);
     redrawButtons();
     
     indexDone = -1;    // Index in to-do list of last action performed
@@ -926,12 +928,12 @@ void mousePressed() {
   else if ( saveButton.isSelected() )  
   {
     // Save file with dialog #####
-    selectOutput("Output .rrt file name:", "SavefileSelected");
+    selectOutput("Output .eeb file name:", "SavefileSelected");
   }
   else if ( openButton.isSelected() )  
   {
     // Open file with dialog #####
-    selectInput("Select a EggPaint (.rrt) file to open:", "fileSelected");  // Opens file chooser
+    selectInput("Select a EggPaint (.eeb) file to open:", "fileSelected");  // Opens file chooser
   }
   else if ( settingsButton.isSelected() )  
   {
@@ -1058,12 +1060,12 @@ void SavefileSelected(File selection) {    // SAVE FILE
 
     FileOutput = new String[0];
 
-    if ( p[p.length - 1].equals("RRT"))
+    if ( p[p.length - 1].equals("EEB"))
       fileOK = true;
-    if ( p[p.length - 1].equals("rrt"))
+    if ( p[p.length - 1].equals("eeb"))
       fileOK = true;      
     if (fileOK == false)
-      savePath = savePath + ".rrt";
+      savePath = savePath + ".eeb";
 
     // If a file was selected, print path to folder 
     println("Save file: " + savePath); 
@@ -1106,12 +1108,12 @@ void fileSelected(File selection) {    // LOAD (OPEN) FILE
     int todoNew;
 
 
-    if ( p[p.length - 1].equals("RRT"))
+    if ( p[p.length - 1].equals("EEB"))
       fileOK = true;
-    if ( p[p.length - 1].equals("rrt"))
-      fileOK = true;      
+    if ( p[p.length - 1].equals("eeb"))
+      fileOK = true;
 
-    println("File OK: " + fileOK); 
+    println("File OK: " + fileOK);
 
     if (fileOK) {
 
@@ -1120,20 +1122,20 @@ void fileSelected(File selection) {    // LOAD (OPEN) FILE
 
       Paused = false;
       pause();
-      pauseButton.label = "BEGIN";
-      pauseButton.displayColor = color(200, 0, 0);
+      //pauseButton.label = "BEGIN";
+      printButton.displayColor = color(200, 0, 0);
 
 
       // Clear indexDone to "zero" (actually, -1, since even element 0 is not "done.")   & redraw to-do list.
 
-      ToDoList = new int[0];   
+      ToDoList = new int[0];
       indexDone = -1;    // Index in to-do list of last action performed
       indexDrawn = -1;   // Index in to-do list of last to-do element drawn to screen
 
       drawToDoList();
 
       println("there are " + lines.length + " lines");
-      for (int i = 0 ; i < lines.length; i++) { 
+      for (int i = 0 ; i < lines.length; i++) {
         todoNew = parseInt(lines[i]);
         //        println(str(todoNew));
         ToDoList = append(ToDoList, todoNew);
