@@ -79,11 +79,6 @@ class SimpleButton
     b.text(label, posX, posY);
   }
 
-  void delete() {
-    // Delete this button
-    // TODO: Find self in button list and remove.
-  }
-
   void updateLabel(String label) {
     this.label = label;
 
@@ -107,4 +102,3 @@ class SimpleButton
       return false;
   }
 }
-

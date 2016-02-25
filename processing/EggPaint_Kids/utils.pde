@@ -22,12 +22,6 @@ int xyEncodeInt2() {
   return (xpos * 10000) + ypos ;
 }
 
-int xyEncodeInt2(int xpos, int ypos) {
-
-  return (xpos * 10000) + ypos ;
-}
-
-
 
 int[] xyDecodeInt2(int encodedInt) {
 
@@ -82,11 +76,10 @@ float getDistance(int x1, int y1, int x2, int y2)
 
 
 void scanSerial() 
-{  
+{
 
   // Serial port search string:  
   int PortCount = 0;
-  int PortNumber = -1;
   String portName;
   String str1, str2;
   int j;
@@ -113,7 +106,8 @@ void scanSerial()
   {
 
     println("\nI found "+PortCount+" serial ports, which are:");
-    println(Serial.list());
+    Object[] serialList = Serial.list();
+    println(serialList);
 
 
     String  os=System.getProperty("os.name").toLowerCase();
@@ -198,7 +192,7 @@ void scanSerial()
 
         myPort.write("v\r");  //Request version number
         delay(50);  // Delay for EBB to respond!
-
+        
         while (myPort.available () > 0) {
           inBuffer = myPort.readString();   
           if (inBuffer != null) {
@@ -207,6 +201,7 @@ void scanSerial()
         }
 
         str1 = "EBB";
+        if (inBuffer != null)
         if (inBuffer.length() > 2)
         {
           str2 = inBuffer.substring(0, 3); 
@@ -230,59 +225,3 @@ void scanSerial()
     }
   }
 }
-
-
-int getHourNow() { 
-  GregorianCalendar cal = new GregorianCalendar();
-  cal.setTime(new Date());
-  int  now = cal.get(Calendar.HOUR);
-  return now;
-}
-
-int getMinuteNow() { 
-  GregorianCalendar cal = new GregorianCalendar();
-  cal.setTime(new Date());
-  int  now = cal.get(Calendar.MINUTE);
-  return now;
-}
-
-int getSecondNow() { 
-  GregorianCalendar cal = new GregorianCalendar();
-  cal.setTime(new Date());
-  int  now = cal.get(Calendar.SECOND);
-  return now;
-}
-
-
-int getMillisNow() { 
-  GregorianCalendar cal = new GregorianCalendar();
-  cal.setTime(new Date());
-  int  now = cal.get(Calendar.MILLISECOND);
-  return now;
-} 
-
-
-void appendFilledSegment(int xin1, int yin1, int xin2, int yin2, int steps)
-{
-  float xIncrement = float(xin2 - xin1) / float(steps);
-  float yIncrement = float(yin2 - yin1) / float(steps);
-  
-  int i = 0;
-  while (i <= steps)
-  {
-
-    int nextX = xin1 + int(float(i) * xIncrement);
-    int nextY = yin1 + int(float(i) * yIncrement);
-    ToDoList = append(ToDoList, xyEncodeInt2(nextX, nextY));    // Command Code: Move to first (X,Y) point
-    i++;
-  } 
-}
-
-
-
-
-
-
-
-
-

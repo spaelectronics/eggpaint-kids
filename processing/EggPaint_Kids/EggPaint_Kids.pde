@@ -1,15 +1,13 @@
 /*
-  RoboPaint RT
+  EggPaint Kids Edition
  
- Real-time painting software for WaterColorBot
+ Real-time painting software for EggBot
  
  https://github.com/evil-mad/robopaint-rt 
  
  Requires: 
  
- TODO: Water/Paint dish highlights may still have some oddities.
- 
- TODO: Speed up redraw of highlights and button text (major improvements have been made; no longer the primary concern).
+ TODO: 
  
  
  
@@ -18,29 +16,35 @@
 import de.looksgood.ani.*;
 import processing.serial.*;
 
-import javax.swing.UIManager; 
-import javax.swing.JFileChooser; 
+import javax.swing.UIManager;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.ImageIcon;
+import javax.swing.JSlider;
+import javax.swing.JComboBox;
 
 
 // User Settings: 
-float MotorSpeed = 1500.0;  // Steps per second, 1500 default
+float MotorSpeed = 400.0;   // Steps per second, 1500 default
+int ServoSpeed = 50;        // Brush UP/DN Speed. Values between 0 - 255 (Lower is slower).
 
-int ServoUpPct = 70;    // Brush UP position, %  (higher number lifts higher). 
-int ServoPaintPct = 30;    // Brush DOWN position, %  (higher number lifts higher). 
-int ServoWashPct = 20;    // Brush DOWN position for washing brush, %  (higher number lifts higher). 
+int ServoUpPct = 55;        // Brush UP position, %  (higher number lifts higher). 
+int ServoPaintPct = 100;    // Brush DOWN position, %  (higher number lifts higher).  
+
+int centerPosition = 87;    // Arm Center Position
 
 boolean reverseMotorX = false;
 boolean reverseMotorY = false;
 
-int delayAfterRaisingBrush = 300; //ms
-int delayAfterLoweringBrush = 300; //ms
+int delayAfterRaisingBrush = 400; //ms
+int delayAfterLoweringBrush = 400; //ms
 
+int brushSize = 4;            // Brush Stroke Size
 int ColorFadeDist = 1000;     // How slowly paint "fades" when drawing (higher number->Slower fading)
-int ColorFadeStart = 250;     // How far you can paint before paint "fades" when drawing 
+int ColorFadeStart = 100000;  // How far you can paint before paint "fades" when drawing
 
 int minDist = 4; // Minimum drag distance to record
 
-//boolean debugMode = true;
 boolean debugMode = false;
 
 
@@ -53,8 +57,9 @@ PImage imgMain;         // Primary drawing canvas
 PImage imgLocator;      // Cursor crosshairs
 PImage imgButtons;      // Text buttons
 PImage imgHighlight;
-String BackgroundImageName = "background.png"; 
-String HelpImageName = "help.png"; 
+String BackgroundImageName = "background.png";
+String HelpImageName = "help.png";
+String SettingsImageName = "settings.png";
 
 float ColorDistance;
 boolean segmentQueued = false;
@@ -62,37 +67,31 @@ int queuePt1 = -1;
 int queuePt2 = -1;
 
 //float MotorStepsPerPixel =  16.75;  // For use with 1/16 steps
-float MotorStepsPerPixel = 8.36;// Good for 1/8 steps-- standard behavior.
-int xMotorPaperOffset =  1400;  // For 1/8 steps  Use 2900 for 1/16?
+float MotorStepsPerPixel = 4.57; // Good for 1/8 steps-- standard behavior.
+int xMotorPaperOffset =  0;   // 1400 For 1/8 steps  Use 2900 for 1/16?
 
 // Positions of screen items
 
-float paintSwatchX = 108.8;
+float paintSwatchX = 43.8;
 float paintSwatchY0 = 84.5;
 float paintSwatchyD = 54.55;
 int paintSwatchOvalWidth = 64;
 int paintSwatchOvalheight = 47;
 
-int WaterDishX = 2;
-int WaterDishY0 = 88;
-float WaterDishyD = 161.25;
-int WaterDishDia = 118;
-
-int MousePaperLeft =  185;
-int MousePaperRight =  769;
-int MousePaperTop =  62;
-int MousePaperBottom =  488;
+int MousePaperLeft =  126;
+int MousePaperRight =  826;
+int MousePaperTop =  123;
+int MousePaperBottom =  298;
 
 int xMotorOffsetPixels = 0;  // Corrections to initial motor position w.r.t. lower plate (paints & paper)
-int yMotorOffsetPixels = 4 ;
+int yMotorOffsetPixels = 0;
 
 
-int xBrushRestPositionPixels = 18;     // Brush rest position, in pixels
+int xBrushRestPositionPixels = 0;     // Brush rest position, in pixels
 int yBrushRestPositionPixels = MousePaperTop + yMotorOffsetPixels;
 
 int ServoUp;    // Brush UP position, native units
 int ServoPaint;    // Brush DOWN position, native units. 
-int ServoWash;    // Brush DOWN position, native units
 
 int MotorMinX;
 int MotorMinY;
@@ -109,9 +108,8 @@ color Yellow = color(255, 255, 0);  // YELLOW
 color Orange = color(255, 140, 0);  // ORANGE
 color Red = color(255, 0, 0);  // RED
 color Black = color(25, 25, 25);  // BLACK
-color Water = color(230, 230, 255);  // BLUE 
+color Water = color(230, 230, 255);  // Water 
 
-boolean firstPath;
 boolean doSerialConnect = true;
 boolean SerialOnline;
 Serial myPort;  // Create object from Serial class
@@ -131,8 +129,6 @@ int MotorLocatorY;
 int lastPosition; // Record last encoded position for drawing
 
 int selectedColor;
-int selectedWater;
-int highlightedWater;
 int highlightedColor; 
 
 int brushColor;
@@ -164,12 +160,8 @@ int lowerBrushStatus;
 int moveStatus;
 int MoveDestX;
 int MoveDestY; 
-int getWaterStatus;
-int WaterDest;
-boolean WaterDestMode;
 int PaintDest; 
 
-int CleaningStatus;
 int getPaintStatus; 
 boolean Paused;
 
@@ -177,6 +169,8 @@ boolean Paused;
 int ToDoList[];  // Queue future events in an integer array; executed when PriorityList is empty.
 int indexDone;    // Index in to-do list of last action performed
 int indexDrawn;   // Index in to-do list of last to-do element drawn to screen
+boolean replayIsRunning;
+boolean clearButtonActive;
 
 
 // Active buttons
@@ -193,15 +187,15 @@ int DefocusColor = 175;
 SimpleButton pauseButton;
 SimpleButton brushUpButton;
 SimpleButton brushDownButton;
-SimpleButton cleanButton;
-SimpleButton parkButton;
+SimpleButton homeButton;
 SimpleButton motorOffButton;
 SimpleButton motorZeroButton;
 SimpleButton clearButton;
-SimpleButton replayButton;
+SimpleButton printButton;
 SimpleButton urlButton;
 SimpleButton openButton;
 SimpleButton saveButton;
+SimpleButton settingsButton;
 
 
 SimpleButton brushLabel;
@@ -210,22 +204,19 @@ SimpleButton UIMessage;
 
 void setup() 
 {
-  size(800, 519);
+  size(864, 519);
 
   Ani.init(this); // Initialize animation library
   Ani.setDefaultEasing(Ani.LINEAR);
 
-
-  firstPath = true;
-
-  offScreen = createGraphics(800, 519, JAVA2D);
+  offScreen = createGraphics(864, 519, JAVA2D);
 
   //// Allow frame to be resized?
   //  if (frame != null) {
   //    frame.setResizable(true);
   //  }
 
-  frame.setTitle("RoboPaint RT");
+  surface.setTitle("EggPaint Kids Edition!");
 
   shiftKeyDown = false;
 
@@ -257,7 +248,6 @@ void setup()
 
   ServoUp = 7500 + 175 * ServoUpPct;    // Brush UP position, native units
   ServoPaint = 7500 + 175 * ServoPaintPct;   // Brush DOWN position, native units. 
-  ServoWash = 7500 + 175 * ServoWashPct;     // Brush DOWN position, native units
 
 
 
@@ -271,10 +261,10 @@ void setup()
 
 
   int xbutton = MousePaperLeft;
-  int ybutton = MousePaperBottom + 20;
+  int ybutton = MousePaperBottom + 25;
 
-  pauseButton = new SimpleButton("Pause", xbutton, MousePaperBottom + 20, font_CB, 20, TextColor, TextHighLight);
-  xbutton += 60; 
+  pauseButton = new SimpleButton("RealTime: Off", xbutton, ybutton, font_CB, 20, TextColor, TextHighLight);
+  xbutton += 120; 
 
   brushLabel = new SimpleButton("Brush:", xbutton, ybutton, font_CB, 20, LabelColor, LabelColor);
   xbutton += 45;
@@ -282,10 +272,7 @@ void setup()
   xbutton += 22;
   brushDownButton = new SimpleButton("Down", xbutton, ybutton, font_CB, 20, TextColor, TextHighLight);
   xbutton += 44;
-
-  cleanButton = new SimpleButton("Clean", xbutton, ybutton, font_CB, 20, TextColor, TextHighLight);
-  xbutton += 44;
-  parkButton = new SimpleButton("Park", xbutton, ybutton, font_CB, 20, TextColor, TextHighLight);
+  homeButton = new SimpleButton("Home", xbutton, ybutton, font_CB, 20, TextColor, TextHighLight);
   xbutton += 60;
 
   motorLabel = new SimpleButton("Motors:", xbutton, ybutton, font_CB, 20, LabelColor, LabelColor);
@@ -294,9 +281,9 @@ void setup()
   xbutton += 30;
   motorZeroButton = new SimpleButton("Zero", xbutton, ybutton, font_CB, 20, TextColor, TextHighLight);
   xbutton += 70;
-  clearButton = new SimpleButton("Clear All", xbutton, MousePaperBottom + 20, font_CB, 20, TextColor, TextHighLight);
+  clearButton = new SimpleButton("Clear All", xbutton, ybutton, font_CB, 20, TextColor, TextHighLight);
   xbutton += 80;
-  replayButton = new SimpleButton("Replay All", xbutton, MousePaperBottom + 20, font_CB, 20, TextColor, TextHighLight);
+  printButton = new SimpleButton("Print Egg", xbutton, ybutton, font_CB, 20, TextColor, TextHighLight);
 
   xbutton = MousePaperLeft - 30;   
   ybutton =  30;
@@ -305,17 +292,19 @@ void setup()
   xbutton += 80;
   saveButton = new SimpleButton("Save File", xbutton, ybutton, font_url, 16, LabelColor, TextHighLight);
 
-  xbutton = 655;
+  xbutton = 730;
 
-  urlButton = new SimpleButton("WaterColorBot.com", xbutton, ybutton, font_url, 16, LabelColor, TextHighLight);
+  urlButton = new SimpleButton("Get a EggBot!", xbutton, ybutton, font_url, 16, LabelColor, TextHighLight);
 
-  UIMessage = new SimpleButton("Welcome to RoboPaint RT! Hold 'h' key for help!", 
-  MousePaperLeft, MousePaperTop - 5, font_CB, 20, LabelColor, LabelColor);
+  UIMessage = new SimpleButton("Welcome to EggPaint Kids! Hold 'h' key for help!", 
+  MousePaperLeft, MousePaperTop - 10, font_CB, 20, LabelColor, LabelColor);
+  
+  settingsButton = new SimpleButton("Settings", MousePaperRight - 50, MousePaperTop - 10, font_CB, 20, LabelColor, LabelColor);
 
 
 
 
-  UIMessage.label = "Searching For WaterColorBot... ";
+  UIMessage.label = "Searching For EggBot... ";
   UIMessageExpire = millis() + 25000; 
 
   rectMode(CORNERS);
@@ -330,10 +319,8 @@ void setup()
   indexDone = -1;    // Index in to-do list of last action performed
   indexDrawn = -1;   // Index in to-do list of last to-do element drawn to screen
 
-  highlightedWater = 8;
   highlightedColor = 8;
   selectedColor = 8; // No color selected, to begin with
-  selectedWater = 8; // No water selected, to begin with
   brushColor = 8; // No paint on brush yet.  Use value 8, "water"
   ColorDistance = 0;
 
@@ -344,16 +331,13 @@ void setup()
   MoveDestX = -1;
   MoveDestY = -1;
 
-  WaterDest = -1;
-  WaterDestMode = false;
-
   PaintDest = -1; 
-  getWaterStatus = -1;
-  CleaningStatus = -1;
   getPaintStatus = -1; 
 
-  Paused = false;
+  Paused = true;
   BrushDownAtPause = false;
+  replayIsRunning = false;
+  clearButtonActive = false;
 
   // Set initial position of indicator at carriage minimum 0,0
   int[] pos = getMotorPixelPos();
@@ -377,7 +361,7 @@ void pause()
   if (Paused)
   {
     Paused = false;
-    pauseButton.label = "Pause";
+    pauseButton.label = "RealTime: On";
 
 
     if (BrushDownAtPause)
@@ -412,7 +396,7 @@ void pause()
   else
   {
     Paused = true;
-    pauseButton.label = "Resume";
+    pauseButton.label = "RealTime: Off";
     //TextColor
 
 
@@ -462,26 +446,13 @@ boolean serviceBrush()
       MoveToXY(); // Perform next move, if one is pending.
       serviceStatus = true;
     }
-    else if (getWaterStatus >= 0) {
-      getWater(); // Advance to next step of getting water
-      serviceStatus = true;
-    }
-    else if (CleaningStatus >= 0) {
-      cleanBrush(); // Advance to next cleaning step
-      serviceStatus = true;
-    }
-    else if (getPaintStatus >= 0)
-    {
-      getPaint(); // Advance to next paint-getting step
-      serviceStatus = true;
-    }
   }
   return serviceStatus;
 }
 
 
 void drawToDoList()
-{  
+{
   // Erase all painting on main image background, and draw the existing "ToDo" list
   // on the off-screen buffer.
 
@@ -505,7 +476,7 @@ void drawToDoList()
       offScreen.image(imgMain, 0, 0);
 
 
-    offScreen.strokeWeight(10); 
+    offScreen.strokeWeight(brushSize); 
     offScreen.stroke(color_for_new_ToDo_paths);
 
     x1 = 0;
@@ -613,7 +584,7 @@ void queueSegmentToDraw(int prevPoint, int newPoint)
 void drawQueuedSegment()
 {    // Draw new "done" segment, on the off-screen buffer.
 
-  int x1, x2, y1, y2;  
+  int x1, x2, y1, y2;
   color interA;
   float brightness;
 
@@ -623,7 +594,7 @@ void drawQueuedSegment()
 
     offScreen.beginDraw();     // Ready the offscreen buffer for drawing
     offScreen.image(imgMain, 0, 0);
-    offScreen.strokeWeight(11); 
+    offScreen.strokeWeight(brushSize);
 
     interA = paintset[brushColor];
 
@@ -639,9 +610,9 @@ void drawQueuedSegment()
     y1 = queuePt1 - 10000 * x1;
 
     x2 = floor(queuePt2 / 10000);
-    y2 = queuePt2 - 10000 * x2;  
+    y2 = queuePt2 - 10000 * x2;
 
-    offScreen.line(x1, y1, x2, y2); 
+    offScreen.line(x1, y1, x2, y2);
 
     offScreen.endDraw();
 
@@ -655,7 +626,7 @@ void draw() {
 
   if (debugMode)
   {
-    frame.setTitle("RoboPaint RT      " + int(frameRate) + " fps");
+    surface.setTitle("EggPaint Kids Edition!      " + int(frameRate) + " fps");
   }
 
   drawToDoList();
@@ -663,7 +634,7 @@ void draw() {
   // NON-DRAWING LOOP CHECKS ==========================================
 
   if (doSerialConnect == false)
-    checkServiceBrush(); 
+    checkServiceBrush();
 
 
   checkHighlights();
@@ -674,7 +645,7 @@ void draw() {
       UIMessage.displayColor = lerpColor(UIMessage.displayColor, color(242), .5);
       UIMessage.highlightColor = UIMessage.displayColor;
 
-      if (millis() > (UIMessageExpire + 500)) { 
+      if (millis() > (UIMessageExpire + 500)) {
         UIMessage.label = "";
         UIMessage.displayColor = LabelColor;
       }
@@ -700,7 +671,7 @@ void draw() {
     image(imgHighlight, 0, 0);
 
     // Draw locator crosshair at xy pos, less crosshair offset
-    image(imgLocator, MotorLocatorX-10, MotorLocatorY-15);
+    image(imgLocator, MotorLocatorX+MousePaperLeft-10, MotorLocatorY-10);
   }
 
 
@@ -709,35 +680,58 @@ void draw() {
     // FIRST RUN ONLY:  Connect here, so that 
 
       doSerialConnect = false;
+      
+      
+      
+    // Load settings from file
+      String file[] = loadStrings("settings.ini");
+      if (file != null) 
+      {
+        // Debugging Info
+        //if (debugMode) println("\nThere are " + file.length + " entries in the file.\n");
+        //if (debugMode) println("Brush Size: " + file[0] + "\nMotor Speed: " + file[1] + "\nServo Speed: " + file[2] + "\nServo UP Position: " + file[3] + "\nServo DOWN Position: " + file[4]);
+        // Load the settings into the program.
+        brushSize = int(file[0]);
+        MotorSpeed = float(file[1]);
+        ServoSpeed = int(file[2]);
+        ServoUpPct = int(file[3]);
+        ServoPaintPct = int(file[4]);
+        // Convert to native units
+        ServoUp = 7500 + 175 * ServoUpPct;    // Brush UP position, native units
+        ServoPaint = 7500 + 175 * ServoPaintPct;   // Brush DOWN position, native units. 
+      } 
+      else 
+      if (debugMode) println("\nsettings.ini file does not exist! Using default settings.");
+      
+      
 
     scanSerial();
 
     if (SerialOnline)
-    {    
-      myPort.write("EM,2\r");  //Configure both steppers to 1/8 step mode
+    {
+      myPort.write("EM,1\r");  //Configure both steppers to 1/8 step mode
 
         // Configure brush lift servo endpoints and speed
-      myPort.write("SC,4," + str(ServoPaint) + "\r");  // Brush DOWN position, for painting
-      myPort.write("SC,5," + str(ServoUp) + "\r");  // Brush UP position 
-
-      //    myPort.write("SC,10,255\r"); // Set brush raising and lowering speed.
-      myPort.write("SC,10,65535\r"); // Set brush raising and lowering speed.
+      myPort.write("SC,4," + str(ServoPaint) + "\r");   // Brush DOWN position, for painting.
+      myPort.write("SC,5," + str(ServoUp) + "\r");      // Brush UP position.
+      myPort.write("SC,10," + str(ServoSpeed) + "\r");  // Set brush raising and lowering speed.
+      //myPort.write("HM\r");                             // Home the EggBot.
 
 
       // Ensure that we actually raise the brush:
-      BrushDown = true;  
-      raiseBrush();    
+      BrushDown = true;
+      raiseBrush();
 
-      UIMessage.label = "Welcome to RoboPaint RT!  Hold 'h' key for help!";
+      UIMessage.label = "Welcome to EggPaint Kids!  Hold 'h' key for help!";
       UIMessageExpire = millis() + 5000;
       println("Now entering interactive painting mode.\n");
       redrawButtons();
     }
     else
-    { 
+    {
       println("Now entering offline simulation mode.\n");
 
-      UIMessage.label = "WaterColorBot not found.  Entering Simulation Mode. ";
+      UIMessage.label = "EggBot not found.  Entering Simulation Mode. ";
       UIMessageExpire = millis() + 5000;
       redrawButtons();
     }
@@ -764,38 +758,21 @@ void redrawHighlight() {
   offScreen.beginDraw();
   offScreen.background(0, 0);
 
-  // Indicate Highlighted Color or Water Dish:
-
-  if ((highlightedWater >= 0)  && (highlightedWater < 8)) {
-    // Indicate which water dish is highlighted
-    offScreen.stroke(0, 0, 255, 50);
-    offScreen.strokeWeight(15); 
-    offScreen.noFill(); 
-    offScreen.ellipse(WaterDishX, WaterDishY0 + highlightedWater * WaterDishyD, WaterDishDia, WaterDishDia);
-  }
+  // Indicate Highlighted Color:
   if ((highlightedColor >= 0) && (highlightedColor < 8)) {
     // Indicate which color is highlighted
-    offScreen.stroke(0, 0, 0, 50);  
-    offScreen.strokeWeight(8); 
-    offScreen.noFill(); 
+    offScreen.stroke(0, 0, 0, 50);
+    offScreen.strokeWeight(8);
+    offScreen.noFill();
     offScreen.ellipse(paintSwatchX, paintSwatchY0 + highlightedColor * paintSwatchyD, paintSwatchOvalWidth, paintSwatchOvalheight);
   }
 
-  // Indicate Selected Color or Water Dish: 
-  if ((selectedWater >= 0)  && (selectedWater < 8)) {
-
-    // Indicate which water dish is selected
-    offScreen.stroke(0, 0, 255, 128);
-    offScreen.strokeWeight(7); 
-    offScreen.noFill(); 
-    offScreen.ellipse(WaterDishX, WaterDishY0 + selectedWater * WaterDishyD, WaterDishDia, WaterDishDia);
-  }
-
+  // Indicate Selected Color:
   if ((selectedColor >= 0)  && (selectedColor < 8)) {
     // Indicate which color is selected
-    offScreen.stroke(0, 0, 0, 100);  
-    offScreen.strokeWeight(4); 
-    offScreen.noFill(); 
+    offScreen.stroke(0, 0, 0, 100);
+    offScreen.strokeWeight(4);
+    offScreen.noFill();
     offScreen.ellipse(paintSwatchX, paintSwatchY0 + selectedColor * paintSwatchyD, paintSwatchOvalWidth, paintSwatchOvalheight);
   }
 
@@ -810,10 +787,10 @@ void redrawLocator() {
   offScreen.beginDraw();
   offScreen.background(0, 0);
 
-  offScreen.stroke(0, 0, 0, 128); 
-  offScreen.strokeWeight(2);  
+  offScreen.stroke(0, 0, 0, 128);
+  offScreen.strokeWeight(2);
   int x0 = 10;
-  int y0 = 10; 
+  int y0 = 10;
 
   if (BrushDown)
     offScreen.fill(paintset[brushColor]);
@@ -833,27 +810,14 @@ void redrawLocator() {
 
 void mousePressed() {
   int i;
-  int x1, x2, y1, y2;
   boolean doHighlightRedraw = false;
 
   //The mouse button was just pressed!  Let's see where the user clicked!
 
-  if (highlightedWater >= 0)            // First, check if we are over water dishes:
-  {
-    selectedWater = highlightedWater;
-    selectedColor = 8; // Deselect color paint 
-
-    i = -1 * (selectedWater + 20); 
-    ToDoList = append(ToDoList, i);
-    doHighlightRedraw = true;
-
-    ColorDistance += ColorFadeDist/3;
-  }
-  else if (highlightedColor >= 0)        // Next, check if we are over paint colors:
+  if (highlightedColor >= 0)        // Check if we are over paint colors:
   {
     selectedColor = highlightedColor;
-    selectedWater = 8; // Deselect water dish
-    i = -1 * (selectedColor + 10); 
+    i = -1 * (selectedColor + 10);
     ToDoList = append(ToDoList, i);
     doHighlightRedraw = true;
 
@@ -862,27 +826,22 @@ void mousePressed() {
     ColorDistance = 0;
   }
   else  if ((mouseX >= MousePaperLeft) && (mouseX <= MousePaperRight) && (mouseY >= MousePaperTop) && (mouseY <= MousePaperBottom))
-  {  // Begin recording gesture   // Over paper!
+  {
+
+      if (selectedColor == 8)
+      { // Force the selection of a color.
+        JOptionPane.showMessageDialog(null, "No color is selected! \nPlease choose a color first!", "No Color Selected!", 
+                                                JOptionPane.INFORMATION_MESSAGE, new ImageIcon(dataPath("brush_icon.png")));
+      } else {
+        
+    // Begin recording gesture   // Over paper!
     recordingGesture = true;
 
-    //  ***TODO
-    // If just beginning and no color has yet selected, get water before beginning. 
-
-    if (firstPath)
-    {
-      if (brushColor == 8)
-      { 
-        getWater(2, false);   // Brush is clean.  Dip in the clean water.
-      }  
-      firstPath = false;
-    }
-
-
     ToDoList = append(ToDoList, -30);   // Command Code:  -30 (raise brush)  (Only has an effect if the brush is already down.)
-
     ToDoList = append(ToDoList, xyEncodeInt2());    // Command Code: Move to first (X,Y) point
     ToDoList = append(ToDoList, -31);              // Command Code:  -31 (lower brush)
     doHighlightRedraw = true;
+    }
   }
 
   if (doHighlightRedraw) {
@@ -892,7 +851,7 @@ void mousePressed() {
 
 
   if ( pauseButton.isSelected() )  
-    pause(); 
+    pause();
   else if ( brushUpButton.isSelected() )  
   {
 
@@ -908,39 +867,33 @@ void mousePressed() {
     else
       ToDoList = append(ToDoList, -31);   // Command Code:  -31 (lower brush)
   }
-  else if ( cleanButton.isSelected() )  
-  {
-
-    if (Paused)
-      cleanBrush();
-    else
-      ToDoList = append(ToDoList, -40);   // Command Code:  -40 (clean brush)
-
-    color_for_new_ToDo_paths = Water;
-  } 
   else if (urlButton.isSelected()) {
-    link("http://watercolorbot.com");
+    link("http://www.spaelectronics.com");
   } 
-  else if ( parkButton.isSelected() )  
+  else if ( homeButton.isSelected() )  
   {
 
-    if (Paused)
-    { 
-      raiseBrush();
-      MoveToXY(0, 0);
-    }
-    else
-    {
-      ToDoList = append(ToDoList, -30);   // Command Code:  -30 (raise brush)
-      ToDoList = append(ToDoList, -35);  // Command code: Go home (0,0)
-    }
+    if (!Paused) pause();
+      
+      if (BrushDown == true) raiseBrush();
+      MotorsOff();
+      JOptionPane.showMessageDialog(null, "Push the \"Pen Arm\" all the way to the left side.\nPress OK when ready.", "Home", 
+                                                JOptionPane.INFORMATION_MESSAGE, new ImageIcon(dataPath("brush_icon.png")));
+      MoveRelativeXY(0, 100);
+      zero();
   }
-  else if ( motorOffButton.isSelected() )  
-    MotorsOff();    
-  else if ( motorZeroButton.isSelected() )  
-    zero();      
-  else if ( clearButton.isSelected() )  
+  else if ( motorOffButton.isSelected() )
+    MotorsOff();
+  else if ( motorZeroButton.isSelected() )
+    zero();
+  else if ( clearButton.isSelected() )
   {  // ***** CLEAR ALL *****
+  
+    clearButtonActive = true;
+  
+    selectedColor = 8; // No color selected
+    brushColor = 8; // No paint on brush yet.  Use value 8, "water"
+   // color_for_new_ToDo_paths = Water; // Change Drawing Color
 
     ToDoList = new int[0];
     //    ToDoList = append(ToDoList, -1 * (brushColor + 10));
@@ -955,14 +908,19 @@ void mousePressed() {
 
     Paused = true; 
     pause();
+    redrawHighlight();
   }  
-  else if ( replayButton.isSelected() )  
+  else if ( printButton.isSelected() )  
   {
     // Clear indexDone to "zero" (actually, -1, since even element 0 is not "done.")   & redraw to-do list.
-
+    
+    replayIsRunning = true;
+    printButton.label = "Printing...";
+    redrawButtons();
+    
     indexDone = -1;    // Index in to-do list of last action performed
     indexDrawn = -1;   // Index in to-do list of last to-do element drawn to screen
-
+    
     drawToDoList();
   }
   else if ( saveButton.isSelected() )  
@@ -973,7 +931,107 @@ void mousePressed() {
   else if ( openButton.isSelected() )  
   {
     // Open file with dialog #####
-    selectInput("Select a RoboPaint RT (.rrt) file to open:", "fileSelected");  // Opens file chooser
+    selectInput("Select a EggPaint (.rrt) file to open:", "fileSelected");  // Opens file chooser
+  }
+  else if ( settingsButton.isSelected() )  
+  {
+    // Display User Settings
+        String[] brushList = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
+    JComboBox field1 = new JComboBox(brushList);
+    field1.setSelectedIndex(brushSize-1);
+    
+    
+    JSlider field2 = new JSlider(JSlider.HORIZONTAL, 0, 100, int(map(MotorSpeed,100,1000,0,100)));
+    JSlider field3 = new JSlider(JSlider.HORIZONTAL, 0, 100, int(map(ServoSpeed,20,160,0,100)));
+    JSlider field4 = new JSlider(JSlider.HORIZONTAL, 0, 100, ServoUpPct);
+    JSlider field5 = new JSlider(JSlider.HORIZONTAL, 0, 100, ServoPaintPct);
+    
+    //Turn on labels at major tick marks.
+    field2.setMajorTickSpacing(25);
+    field2.setMinorTickSpacing(5);
+    field2.setPaintTicks(true);
+    field2.setPaintLabels(true);
+    field3.setMajorTickSpacing(25);
+    field3.setMinorTickSpacing(5);
+    field3.setPaintTicks(true);
+    field3.setPaintLabels(true);
+    field4.setMajorTickSpacing(25);
+    field4.setMinorTickSpacing(5);
+    field4.setPaintTicks(true);
+    field4.setPaintLabels(true);
+    field5.setMajorTickSpacing(25);
+    field5.setMinorTickSpacing(5);
+    field5.setPaintTicks(true);
+    field5.setPaintLabels(true);
+    
+    Object[] message = {
+        "Brush Stroke Size:", field1,
+        "Motor Speed:", field2,
+        "Servo Speed:", field3,
+        "Servo Up Position:", field4,
+        "Servo Down Position:", field5,
+    };
+    
+    Object[] options = {"OK", "Restore Defaults", "Cancel"};
+    int option = JOptionPane.showOptionDialog(null, message, "EggPaint Settings", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+    if (option == JOptionPane.YES_OPTION)
+    {
+      
+      // Set the new variables
+      brushSize = (int)field1.getSelectedIndex() + 1;
+      MotorSpeed = map(field2.getValue(),0,100,100,1000);
+      ServoSpeed = int(map(field3.getValue(),0,100,20,160));
+      ServoUpPct = field4.getValue();
+      ServoPaintPct = field5.getValue();
+      
+      
+      // Configure servo lift, endpoints and speed
+      ServoUp = 7500 + 175 * ServoUpPct;    // Brush UP position, native units
+      ServoPaint = 7500 + 175 * ServoPaintPct;   // Brush DOWN position, native units.
+      myPort.write("SC,4," + str(ServoPaint) + "\r");   // Brush DOWN position, for painting.
+      myPort.write("SC,5," + str(ServoUp) + "\r");      // Brush UP position.
+      myPort.write("SC,10," + str(ServoSpeed) + "\r");  // Set brush raising and lowering speed.
+      
+      // Add all settings to an array
+      String[] output=new String[0];
+      output=append(output,str(brushSize));
+      output=append(output,str(MotorSpeed));
+      output=append(output,str(ServoSpeed));
+      output=append(output,str(ServoUpPct));
+      output=append(output,str(ServoPaintPct));
+      // Save settings to file
+      saveStrings("settings.ini",output); 
+      
+    }
+     else if (option == JOptionPane.NO_OPTION)
+    { // Restore Default Settings
+    
+      //if (debugMode) println("Restore Default Settings");
+      brushSize = 4;          // Brush Stroke Size
+      MotorSpeed = 400.0;     // Steps per second, 1500 default
+      ServoSpeed = 50;        // Brush UP/DN Speed. Values between 0 - 255 (Lower is slower).
+      ServoUpPct = 55;        // Brush UP position, %  (higher number lifts higher). 
+      ServoPaintPct = 100;    // Brush DOWN position, %  (higher number lifts higher).
+      
+      // Add all settings to an array
+      String[] output=new String[0];
+      output=append(output,str(brushSize));
+      output=append(output,str(MotorSpeed));
+      output=append(output,str(ServoSpeed));
+      output=append(output,str(ServoUpPct));
+      output=append(output,str(ServoPaintPct));
+      // Save settings to file
+      saveStrings("settings.ini",output); 
+      
+      // Configure servo lift, endpoints and speed
+      ServoUp = 7500 + 175 * ServoUpPct;    // Brush UP position, native units
+      ServoPaint = 7500 + 175 * ServoPaintPct;   // Brush DOWN position, native units.
+      myPort.write("SC,4," + str(ServoPaint) + "\r");   // Brush DOWN position, for painting.
+      myPort.write("SC,5," + str(ServoUp) + "\r");      // Brush UP position.
+      myPort.write("SC,10," + str(ServoSpeed) + "\r");  // Set brush raising and lowering speed.
+      
+      JOptionPane.showMessageDialog(null, "Default settings have been restored.", "Default Settings", JOptionPane.INFORMATION_MESSAGE);
+    }
   }
 }
 
@@ -1099,9 +1157,8 @@ void fileSelected(File selection) {    // LOAD (OPEN) FILE
 
 void mouseDragged() { 
 
-  int i, j;
+  int i;
   int posOld, posNew;
-  int tempPos;
 
   boolean addpoint = false;
   float distTemp = 0;
@@ -1172,10 +1229,6 @@ void keyReleased()
 
 void keyPressed()
 {
-
-  int nx = 0;
-  int ny = 0;
-
   if (key == CODED) {
 
     // Arrow keys are used for nudging, with or without shift key.
@@ -1245,4 +1298,3 @@ void keyPressed()
       MotorSpeed = 2000;
   }
 }
-

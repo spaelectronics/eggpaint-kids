@@ -15,12 +15,25 @@ void checkServiceBrush() {
       int intTemp = -1;
 
 
-      if ((ToDoList.length > (indexDone + 1))   && (Paused == false))
+      if ((ToDoList.length > (indexDone + 1))   && ((Paused == false) || (replayIsRunning == true)))
       {
         actionItem = true;
         intTemp = ToDoList[1 + indexDone];  
 
         indexDone++;
+        
+        if ((ToDoList.length <= (indexDone + 1))   && (replayIsRunning == true))
+        {
+          replayIsRunning = false;
+          printButton.label = "Print Egg";
+          redrawButtons();
+        }
+        
+        if ((ToDoList.length <= (indexDone + 1))   && (clearButtonActive == true))
+        {
+          clearButtonActive = false;
+          pause();
+        }
       }
       
 
@@ -85,15 +98,6 @@ void checkServiceBrush() {
             intTemp -= 10; 
             getPaint(intTemp);
           }
-          else if ((intTemp >= 20) && (intTemp < 30)) 
-          {  // Get water from dish  
-            intTemp -= 20;
-            getWater(intTemp, false);
-          }  
-          else if (intTemp == 40) 
-          { 
-            cleanBrush();
-          }
           else if (intTemp == 30) 
           {
             raiseBrush();
@@ -118,23 +122,10 @@ void checkHighlights() {
   float tempFloat;
 
   if (recordingGesture == false) {
-    int x1 = -1;
+    //int x1 = -1;
     int x2 = -1;
 
-    // Check for mouse over water dishes:
-    if (mouseX < WaterDishX + (WaterDishDia/2))
-    {
-      // Mouse is far enough left to be over the water dishes.
-      for (i = 0; i < 3; i++) { 
-        tempFloat = WaterDishY0 + i * WaterDishyD - ( WaterDishDia / 2);
-        if ((mouseY > tempFloat ) && (mouseY < (tempFloat + WaterDishDia)))
-        {
-          x1 = i;
-          break;
-        }
-      }
-    }
-    else if ((mouseX > paintSwatchX - (paintSwatchOvalWidth /2) ) &&
+    if ((mouseX > paintSwatchX - (paintSwatchOvalWidth /2) ) &&
       (mouseX < paintSwatchX + (paintSwatchOvalWidth / 2)))
     {   // Check for mouse over paint swatches:
 
@@ -146,12 +137,6 @@ void checkHighlights() {
           break;
         }
       }
-    }
-
-    if (x1 != highlightedWater)
-    {
-      doHighlightRedraw = true;
-      highlightedWater = x1;
     }
 
     if (x2 != highlightedColor)
@@ -167,7 +152,7 @@ void checkHighlights() {
   if ((mouseY >= MousePaperBottom)  || (mouseY < MousePaperTop)  )
   {
     if ((mouseY <= height)  && (mouseX >=  (MousePaperLeft - 50)))
-    { 
+    {
       redrawButtons();
     }
   }
@@ -177,4 +162,3 @@ void checkHighlights() {
     redrawHighlight();
   }
 }
-
