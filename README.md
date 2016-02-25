@@ -1,13 +1,10 @@
-RoboPaint RT
+EggPaint Kids Edition!
 
 =======
 
-Real Time painting software for the WaterColorBot
+Kid Friendly painting software for the "EggBot Kids Edition".
 
-http://watercolorbot.com/
-
-Documentation home: 
-http://watercolorbot.com/docs
+http://www.spaelectronics.com/
 
 
 ==========  INSTALLATION  ==========  
@@ -20,6 +17,6 @@ http://watercolorbot.com/docs
 		processing.org 
 	B. Download and install ani library, from 
 		http://www.looksgood.de/libraries/Ani/
-	C. Open robopaint-rt-master>processing>RoboPaint_RT>RoboPaint_RT.pde
+	C. Open eggpaint-kids-master>processing>EggPaint_Kids>EggPaint_Kids.pde
 		from within Processing
 	D. Click "Run" button
