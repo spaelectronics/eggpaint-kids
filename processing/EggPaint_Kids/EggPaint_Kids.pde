@@ -43,7 +43,7 @@ int brushSize = 4;            // Brush Stroke Size
 int ColorFadeDist = 1000;     // How slowly paint "fades" when drawing (higher number->Slower fading)
 int ColorFadeStart = 100000;  // How far you can paint before paint "fades" when drawing
 
-int minDist = 4; // Minimum drag distance to record
+int minDist = 1; // Minimum drag distance to record
 
 boolean debugMode = false;
 
@@ -78,10 +78,10 @@ float paintSwatchyD = 54.55;
 int paintSwatchOvalWidth = 64;
 int paintSwatchOvalheight = 47;
 
-int MousePaperLeft =  126;
-int MousePaperRight =  826;
-int MousePaperTop =  123;
-int MousePaperBottom =  298;
+int MousePaperLeft =  121;
+int MousePaperRight =  830;
+int MousePaperTop =  120;
+int MousePaperBottom =  300;
 
 int xMotorOffsetPixels = 0;  // Corrections to initial motor position w.r.t. lower plate (paints & paper)
 int yMotorOffsetPixels = 0;
@@ -1166,10 +1166,10 @@ void mouseDragged() {
   float distTemp = 0;
 
   if (recordingGesture)
-  { 
+  {
     posNew = xyEncodeInt2();
 
-    i = ToDoList.length; 
+    i = ToDoList.length;
 
     if (i > 1)
     {
@@ -1180,7 +1180,7 @@ void mouseDragged() {
         addpoint = true;
         distTemp = getDistance(posOld, posNew) ;
         // Only add points that are some minimum distance away from each other 
-        if (distTemp < minDist) {  
+        if (distTemp < minDist) {
           addpoint = false;
         }  
 
@@ -1189,7 +1189,7 @@ void mouseDragged() {
       }
     }
     else
-    { // List length may be zero. 
+    { // List length may be zero.
       ToDoList = append(ToDoList, posNew);  // Command code: XY coordinate pair
     }
   }
