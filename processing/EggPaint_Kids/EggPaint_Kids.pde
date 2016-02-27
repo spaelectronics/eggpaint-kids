@@ -700,9 +700,10 @@ void draw() {
         ServoUp = 7500 + 175 * ServoUpPct;    // Brush UP position, native units
         ServoPaint = 7500 + 175 * ServoPaintPct;   // Brush DOWN position, native units. 
       } 
-      else 
-      if (debugMode) println("\nsettings.ini file does not exist! Using default settings.");
-      
+      else
+      {
+        //if (debugMode) println("\nsettings.ini file does not exist! Using default settings.");
+      }
       
 
     scanSerial();
@@ -724,12 +725,12 @@ void draw() {
 
       UIMessage.label = "Welcome to EggPaint Kids!  Hold 'h' key for help!";
       UIMessageExpire = millis() + 5000;
-      println("Now entering interactive painting mode.\n");
+      //if (debugMode) println("Now entering interactive painting mode.\n");
       redrawButtons();
     }
     else
     {
-      println("Now entering offline simulation mode.\n");
+      //if (debugMode) println("Now entering offline simulation mode.\n");
 
       UIMessage.label = "EggBot not found.  Entering Simulation Mode. ";
       UIMessageExpire = millis() + 5000;
@@ -1008,7 +1009,7 @@ void mousePressed() {
      else if (option == JOptionPane.NO_OPTION)
     { // Restore Default Settings
     
-      //if (debugMode) println("Restore Default Settings");
+      //if (debugMode) println("Default Settings Restored");
       brushSize = 4;          // Brush Stroke Size
       MotorSpeed = 400.0;     // Steps per second, 1500 default
       ServoSpeed = 50;        // Brush UP/DN Speed. Values between 0 - 255 (Lower is slower).
@@ -1043,8 +1044,7 @@ void mousePressed() {
 void SavefileSelected(File selection) {    // SAVE FILE
   if (selection == null) {
     // If a file was not selected
-    println("No output file was selected...");
-    //       ErrorDisplay = "ERROR: NO FILE NAME CHOSEN.";
+    //if (debugMode) println("No output file was selected...");
 
     UIMessage.label = "File not saved (reason: no file name chosen).";
     UIMessageExpire = millis() + 3000;
@@ -1063,26 +1063,23 @@ void SavefileSelected(File selection) {    // SAVE FILE
     if ( p[p.length - 1].equals("EEB"))
       fileOK = true;
     if ( p[p.length - 1].equals("eeb"))
-      fileOK = true;      
+      fileOK = true;
     if (fileOK == false)
       savePath = savePath + ".eeb";
 
-    // If a file was selected, print path to folder 
-    println("Save file: " + savePath); 
+    // If a file was selected, print path to folder
+    //if (debugMode) println("Save file: " + savePath);
 
-    int listLength = ToDoList.length; 
+    int listLength = ToDoList.length;
     for ( int i = 0; i < listLength; ++i) {
 
       FileOutput = append(FileOutput, str(ToDoList[i]));
-    } 
+    }
 
     saveStrings(savePath, FileOutput);
 
     UIMessage.label = "File Saved!";
     UIMessageExpire = millis() + 3000;
-
-
-    //    ErrorDisplay = "SAVING FILE...";
   }
 }
 
@@ -1090,18 +1087,16 @@ void SavefileSelected(File selection) {    // SAVE FILE
 
 void fileSelected(File selection) {    // LOAD (OPEN) FILE
   if (selection == null) {
-    println("Window was closed or the user hit cancel.");
+    //if (debugMode) println("Window was closed or the user hit cancel.");
 
     UIMessage.label = "File not loaded (reason: no file selected).";
     UIMessageExpire = millis() + 3000;
   } 
   else {
-    //println("User selected " + selection.getAbsolutePath());
-
     String loadPath = selection.getAbsolutePath();
 
-    // If a file was selected, print path to file 
-    println("Loaded file: " + loadPath); 
+    // If a file was selected, print path to file
+    //if (debugMode) println("Loaded file: " + loadPath);
 
     String[] p = splitTokens(loadPath, ".");
     boolean fileOK = false;
@@ -1113,7 +1108,7 @@ void fileSelected(File selection) {    // LOAD (OPEN) FILE
     if ( p[p.length - 1].equals("eeb"))
       fileOK = true;
 
-    println("File OK: " + fileOK);
+    //if (debugMode) println("File OK: " + fileOK);
 
     if (fileOK) {
 
@@ -1122,7 +1117,6 @@ void fileSelected(File selection) {    // LOAD (OPEN) FILE
 
       Paused = false;
       pause();
-      //pauseButton.label = "BEGIN";
       printButton.displayColor = color(200, 0, 0);
 
 
@@ -1134,16 +1128,17 @@ void fileSelected(File selection) {    // LOAD (OPEN) FILE
 
       drawToDoList();
 
-      println("there are " + lines.length + " lines");
+      //if (debugMode) println("there are " + lines.length + " lines");
       for (int i = 0 ; i < lines.length; i++) {
         todoNew = parseInt(lines[i]);
-        //        println(str(todoNew));
+        //if (debugMode) println(str(todoNew));
         ToDoList = append(ToDoList, todoNew);
       }
     }
     else {
       // Can't load file
-      //      ErrorDisplay = "ERROR: BAD FILE TYPE";
+      UIMessage.label = "File not loaded (reason: wrong file type).";
+      UIMessageExpire = millis() + 3000;
     }
   }
 }

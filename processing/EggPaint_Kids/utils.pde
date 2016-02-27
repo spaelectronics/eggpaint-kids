@@ -105,8 +105,8 @@ void scanSerial()
   if (serialErr == false)
   {
 
-    println("\nI found "+PortCount+" serial ports, which are:");
     Object[] serialList = Serial.list();
+    println("\nI found "+PortCount+" serial ports, which are:");
     println(serialList);
 
 
