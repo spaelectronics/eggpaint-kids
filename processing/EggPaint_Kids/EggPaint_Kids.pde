@@ -199,6 +199,9 @@ SimpleButton UIMessage;
 void setup() 
 {
   size(864, 519);
+  
+  PImage icon = loadImage("icon.png");
+  surface.setIcon(icon);
 
   Ani.init(this); // Initialize animation library
   Ani.setDefaultEasing(Ani.LINEAR);
