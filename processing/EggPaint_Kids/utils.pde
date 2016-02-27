@@ -1,5 +1,3 @@
-
-
 int xyEncodeInt2() {
 
   // Perform XY limit checks on user input, and then encode position of mouse into a single int.
@@ -16,10 +14,10 @@ int xyEncodeInt2() {
 
   if (ypos < MousePaperTop)
     ypos = MousePaperTop;
-  if (ypos > MousePaperBottom )
+  if (ypos > MousePaperBottom)
     ypos = MousePaperBottom;
 
-  return (xpos * 10000) + ypos ;
+  return (xpos * 10000) + ypos;
 }
 
 
@@ -39,7 +37,7 @@ int[] xyDecodeInt2(int encodedInt) {
 // Return the [x,y] of the motor position in pixels
 int[] getMotorPixelPos() {
   int[] out = {
-    int (float (MotorX) / MotorStepsPerPixel) + xBrushRestPositionPixels, 
+    int (float (MotorX) / MotorStepsPerPixel) + xBrushRestPositionPixels,
     int (float (MotorY) / MotorStepsPerPixel) + yBrushRestPositionPixels
   };
   return out;
@@ -59,7 +57,7 @@ float getDistance(int coord1Int, int coord2Int)
 
 
 
-// Get float distance between two non-encoded (x,y) positions. 
+// Get float distance between two non-encoded (x,y) positions.
 float getDistance(int x1, int y1, int x2, int y2)
 {
   int xdiff = abs(x2 - x1);
@@ -70,23 +68,18 @@ float getDistance(int x1, int y1, int x2, int y2)
 
 
 
-
-
-
-
-
-void scanSerial() 
+void scanSerial()
 {
 
-  // Serial port search string:  
+  // Serial port search string:
   int PortCount = 0;
   String portName;
   String str1, str2;
   int j;
 
 
-  int OpenPortList[]; 
-  OpenPortList = new int[0]; 
+  int OpenPortList[];
+  OpenPortList = new int[0];
 
 
   SerialOnline = false;
@@ -97,7 +90,7 @@ void scanSerial()
     PortCount = Serial.list().length;
   } 
   catch (Exception e) {
-    e.printStackTrace(); 
+    e.printStackTrace();
     serialErr = true;
   }
 
@@ -117,27 +110,26 @@ void scanSerial()
 
 
 
-    if (isMacOs) 
+    if (isMacOs)
     {
-      str1 = "/dev/tty.usbmodem";       // Can change to be the name of the port you want, e.g., COM5.
-      // The default value is "/dev/cu.usbmodem"; which works on Macs.
+      str1 = "/dev/tty.usbmodem";  // Can change to be the name of the port you want, e.g., COM5.
+                                   // The default value is "/dev/cu.usbmodem"; which works on Macs.
 
       str1 = str1.substring(0, 14);
 
       j = 0;
       while (j < PortCount) {
         str2 = Serial.list()[j].substring(0, 14);
-        if (str1.equals(str2) == true) 
+        if (str1.equals(str2) == true)
           OpenPortList =  append(OpenPortList, j);
 
         j++;
       }
     }
 
-    else if  (isWin) 
-    {    
+    else if  (isWin)
+    {
       // All available ports will be listed.
-
       j = 0;
       while (j < PortCount) {
         OpenPortList =  append(OpenPortList, j);
@@ -147,8 +139,7 @@ void scanSerial()
 
     else {
       // Assume linux
-
-      str1 = "/dev/ttyACM"; 
+      str1 = "/dev/ttyACM";
       str1 = str1.substring(0, 11);
 
       j = 0;
@@ -172,7 +163,7 @@ void scanSerial()
       portName = Serial.list()[OpenPortList[j]];
 
       try
-      {    
+      {
         myPort = new Serial(this, portName, 38400);
       }
       catch (Exception e)
@@ -185,14 +176,14 @@ void scanSerial()
       if (portErr == false)
       {
         myPort.buffer(1);
-        myPort.clear(); 
+        myPort.clear();
         println("Serial port "+portName+" found and activated.");
 
         String inBuffer = "";
 
         myPort.write("v\r");  //Request version number
         delay(50);  // Delay for EBB to respond!
-        
+
         while (myPort.available () > 0) {
           inBuffer = myPort.readString();   
           if (inBuffer != null) {
@@ -204,10 +195,10 @@ void scanSerial()
         if (inBuffer != null)
         if (inBuffer.length() > 2)
         {
-          str2 = inBuffer.substring(0, 3); 
+          str2 = inBuffer.substring(0, 3);
           if (str1.equals(str2) == true)
           {
-            // EBB Identified! 
+            // EBB Identified!
             SerialOnline = true;    // confirm that this port is good
             j = OpenPortList.length; // break out of loop
 
@@ -215,7 +206,7 @@ void scanSerial()
           }
           else
           {
-            myPort.clear(); 
+            myPort.clear();
             myPort.stop();
             println("Serial port "+portName+": No EBB detected.");
           }

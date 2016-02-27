@@ -1,5 +1,5 @@
 /**
- * RoboPaint RT - Draw loop check functions (not for drawing)
+ * EggPaint Kids - Draw loop check functions (not for drawing)
  */
 
 
@@ -18,10 +18,10 @@ void checkServiceBrush() {
       if ((ToDoList.length > (indexDone + 1))   && ((Paused == false) || (replayIsRunning == true)))
       {
         actionItem = true;
-        intTemp = ToDoList[1 + indexDone];  
+        intTemp = ToDoList[1 + indexDone];
 
         indexDone++;
-        
+
         if ((ToDoList.length <= (indexDone + 1))   && (replayIsRunning == true))
         {
           replayIsRunning = false;
@@ -37,7 +37,6 @@ void checkServiceBrush() {
           pause();
         }
       }
-      
 
 
       if (actionItem)
@@ -53,14 +52,14 @@ void checkServiceBrush() {
           int y2 = intTemp - 10000 * x2;
 
           int x1 = round( float(x2 - MousePaperLeft) * MotorStepsPerPixel + xMotorPaperOffset);
-          int y1 = round( float(y2 - MousePaperTop) * MotorStepsPerPixel); 
+          int y1 = round( float(y2 - MousePaperTop) * MotorStepsPerPixel);
 
           MoveToXY(x1, y1);
 
           if (BrushDown == true) { 
             if (lastPosition == -1)
-              lastPosition = intTemp; 
-            queueSegmentToDraw(lastPosition, intTemp);  
+              lastPosition = intTemp;
+            queueSegmentToDraw(lastPosition, intTemp);
             lastPosition = intTemp;
           }
 
@@ -71,45 +70,36 @@ void checkServiceBrush() {
            When the first (pre-existing) move completes, we will check to see if SubsequentWaitTime is defined (i.e., >= 0).
            If SubsequentWaitTime is defined, then (1) we add that value to the NextMoveTime:
          
-           NextMoveTime = millis() + SubsequentWaitTime; 
+           NextMoveTime = millis() + SubsequentWaitTime;
            SubsequentWaitTime = -1;
            
            We also (2) queue up that segment to be drawn.
            
-           We also (3) queue up the next move, if there is one that could be queued.  We do 
+           We also (3) queue up the next move, if there is one that could be queued.  We do
            
            */
-           
-           
-           
-           
-           
-           
-           
-           
-           
         }
         else
         {
-          lastPosition = -1;  // For drawing 
+          lastPosition = -1;  // For drawing
 
           intTemp = -1 * intTemp;
 
-          if ((intTemp > 9) && (intTemp < 20)) 
-          {  // Change paint color  
-            intTemp -= 10; 
+          if ((intTemp > 9) && (intTemp < 20))
+          {  // Change paint color
+            intTemp -= 10;
             getPaint(intTemp);
           }
-          else if (intTemp == 30) 
+          else if (intTemp == 30)
           {
             raiseBrush();
           }
-          else if (intTemp == 31) 
-          {  
+          else if (intTemp == 31)
+          {
             lowerBrush();
           }
-          else if (intTemp == 35) 
-          {  
+          else if (intTemp == 35)
+          {
             MoveToXY(0, 0);
           }
         }
@@ -124,14 +114,13 @@ void checkHighlights() {
   float tempFloat;
 
   if (recordingGesture == false) {
-    //int x1 = -1;
     int x2 = -1;
 
     if ((mouseX > paintSwatchX - (paintSwatchOvalWidth /2) ) &&
       (mouseX < paintSwatchX + (paintSwatchOvalWidth / 2)))
     {   // Check for mouse over paint swatches:
 
-      for ( i = 0; i < 8; i++) { 
+      for ( i = 0; i < 8; i++) {
         tempFloat = paintSwatchY0 + i * paintSwatchyD - ( paintSwatchOvalheight / 2);
         if ((mouseY > tempFloat ) && (mouseY < (tempFloat + paintSwatchOvalheight)))
         {
@@ -149,9 +138,8 @@ void checkHighlights() {
   }
 
 
-
   // Manage highlighting of text buttons
-  if ((mouseY >= MousePaperBottom)  || (mouseY < MousePaperTop)  )
+  if ((mouseY >= MousePaperBottom)  || (mouseY < MousePaperTop))
   {
     if ((mouseY <= height)  && (mouseX >=  (MousePaperLeft - 50)))
     {

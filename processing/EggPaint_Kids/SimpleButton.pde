@@ -1,6 +1,5 @@
-
 // These keep track of all the buttons that there are
-static ArrayList buttonList;  // List of all buttons 
+static ArrayList buttonList;  // List of all buttons
 
 // Function to draw all of the buttons at once
 static void DrawButtons(PGraphics buffer) {
@@ -29,21 +28,21 @@ class SimpleButton
   PFont font;
   int fontSize;
   color displayColor;
-  color highlightColor; 
+  color highlightColor;
 
 
   SimpleButton( String label, int posX, int posY ) {
     initButton( label, posX, posY, (PFont)null, 0, color(255, 255, 255, 128), color(255));
   }
 
-  SimpleButton( String label, int posX, int posY, 
-  PFont font, int fontSize, 
+  SimpleButton( String label, int posX, int posY,
+  PFont font, int fontSize,
   color displayColor, color highlightColor) {
     initButton( label, posX, posY, font, fontSize, displayColor, highlightColor );
   }
 
-  void initButton( String label, int posX, int posY, 
-  PFont font, int fontSize, 
+  void initButton( String label, int posX, int posY,
+  PFont font, int fontSize,
   int displayColor, int highlightColor ) {
     if (buttonList == null) {
       // If this is the first button, we need to create a list to store them in.
@@ -55,7 +54,7 @@ class SimpleButton
     this.font = font;
     this.fontSize = fontSize;
     this.displayColor = displayColor;
-    this.highlightColor = highlightColor; 
+    this.highlightColor = highlightColor;
     updateLabel(label);
 
     buttonList.add(this);
@@ -64,7 +63,7 @@ class SimpleButton
   void draw(PGraphics b) {
 
     // Determine
-    if ( isSelected() )
+    if (isSelected())
     {
       b.fill(highlightColor);
     }
@@ -72,8 +71,8 @@ class SimpleButton
       b.fill(displayColor);
     }
 
-    if ( font != null) {
-      b.textFont( font, fontSize );
+    if (font != null) {
+      b.textFont(font, fontSize);
     }
 
     b.text(label, posX, posY);
@@ -91,14 +90,14 @@ class SimpleButton
   }
 
   boolean isSelected() {
-    return ( overRect(posX, posY - buttonHeight, buttonWidth, buttonHeight) );
+    return (overRect(posX, posY - buttonHeight, buttonWidth, buttonHeight));
   }
 
-  boolean overRect(float x, float y, float width, float height) 
+  boolean overRect(float x, float y, float width, float height)
   {
-    if (mouseX >= x && mouseX <= x+width &&  mouseY >= y && mouseY <= y+height) 
-      return true; 
-    else 
+    if (mouseX >= x && mouseX <= x+width &&  mouseY >= y && mouseY <= y+height)
+      return true;
+    else
       return false;
   }
 }
