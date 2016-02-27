@@ -3,19 +3,16 @@
  
  Real-time painting software for EggBot
  
- https://github.com/evil-mad/robopaint-rt 
+ https://github.com/spaelectronics/eggpaint-kids
  
  Requires: 
  
  TODO: 
  
- 
- 
  */
 
 import de.looksgood.ani.*;
 import processing.serial.*;
-
 import javax.swing.UIManager;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -36,14 +33,14 @@ int centerPosition = 87;    // Arm Center Position
 boolean reverseMotorX = false;
 boolean reverseMotorY = false;
 
-int delayAfterRaisingBrush = 400; //ms
+int delayAfterRaisingBrush = 400;  //ms
 int delayAfterLoweringBrush = 400; //ms
 
 int brushSize = 4;            // Brush Stroke Size
 int ColorFadeDist = 1000;     // How slowly paint "fades" when drawing (higher number->Slower fading)
 int ColorFadeStart = 100000;  // How far you can paint before paint "fades" when drawing
 
-int minDist = 1; // Minimum drag distance to record
+int minDist = 1;              // Minimum drag distance to record
 
 boolean debugMode = false;
 
@@ -59,7 +56,6 @@ PImage imgButtons;      // Text buttons
 PImage imgHighlight;
 String BackgroundImageName = "background.png";
 String HelpImageName = "help.png";
-String SettingsImageName = "settings.png";
 
 float ColorDistance;
 boolean segmentQueued = false;
@@ -67,8 +63,8 @@ int queuePt1 = -1;
 int queuePt2 = -1;
 
 //float MotorStepsPerPixel =  16.75;  // For use with 1/16 steps
-float MotorStepsPerPixel = 4.57; // Good for 1/8 steps-- standard behavior.
-int xMotorPaperOffset =  0;   // 1400 For 1/8 steps  Use 2900 for 1/16?
+float MotorStepsPerPixel = 4.57;      // Good for 1/8 steps-- standard behavior.
+int xMotorPaperOffset =  0;           // 1400 For 1/8 steps  Use 2900 for 1/16?
 
 // Positions of screen items
 
@@ -90,7 +86,7 @@ int yMotorOffsetPixels = 0;
 int xBrushRestPositionPixels = 0;     // Brush rest position, in pixels
 int yBrushRestPositionPixels = MousePaperTop + yMotorOffsetPixels;
 
-int ServoUp;    // Brush UP position, native units
+int ServoUp;       // Brush UP position, native units
 int ServoPaint;    // Brush DOWN position, native units. 
 
 int MotorMinX;
@@ -100,20 +96,20 @@ int MotorMaxY;
 
 color[] paintset = new color[9]; 
 
-color Brown =  color(139, 69, 19);  //brown
-color Purple = color(148, 0, 211);  // Purple
-color Blue = color(0, 0, 255);  // BLUE
-color Green = color(0, 128, 0); // GREEN
-color Yellow = color(255, 255, 0);  // YELLOW
-color Orange = color(255, 140, 0);  // ORANGE
-color Red = color(255, 0, 0);  // RED
-color Black = color(25, 25, 25);  // BLACK
-color Water = color(230, 230, 255);  // Water 
+color Brown =  color(139, 69, 19);   // BROWN
+color Purple = color(148, 0, 211);   // PURPLE
+color Blue = color(0, 0, 255);       // BLUE
+color Green = color(0, 128, 0);      // GREEN
+color Yellow = color(255, 255, 0);   // YELLOW
+color Orange = color(255, 140, 0);   // ORANGE
+color Red = color(255, 0, 0);        // RED
+color Black = color(25, 25, 25);     // BLACK
+color Water = color(230, 230, 255);  // No Color Selected 
 
 boolean doSerialConnect = true;
 boolean SerialOnline;
-Serial myPort;  // Create object from Serial class
-int val;        // Data received from the serial port
+Serial myPort;       // Create object from Serial class
+int val;             // Data received from the serial port
 
 boolean BrushDown;
 boolean BrushDownAtPause;
@@ -122,11 +118,11 @@ boolean DrawingPath = false;
 int xLocAtPause;
 int yLocAtPause;
 
-int MotorX;  // Position of X motor
-int MotorY;  // Position of Y motor
+int MotorX;         // Position of X motor
+int MotorY;         // Position of Y motor
 int MotorLocatorX;  // Position of motor locator
 int MotorLocatorY; 
-int lastPosition; // Record last encoded position for drawing
+int lastPosition;   // Record last encoded position for drawing
 
 int selectedColor;
 int highlightedColor; 
@@ -146,13 +142,12 @@ int lastButtonUpdateY = 0;
 
 
 color color_for_new_ToDo_paths = Water;
-//color lastColor_DrawingPath = Water;
 boolean lastBrushDown_DrawingPath;
 int lastX_DrawingPath;
 int lastY_DrawingPath;
 
 
-int NextMoveTime;          //Time we are allowed to begin the next movement (i.e., when the current move will be complete).
+int NextMoveTime;               //Time we are allowed to begin the next movement (i.e., when the current move will be complete).
 int SubsequentWaitTime = -1;    //How long the following movement will take.
 int UIMessageExpire;
 int raiseBrushStatus;
@@ -197,7 +192,6 @@ SimpleButton openButton;
 SimpleButton saveButton;
 SimpleButton settingsButton;
 
-
 SimpleButton brushLabel;
 SimpleButton motorLabel;
 SimpleButton UIMessage;
@@ -210,7 +204,7 @@ void setup()
   Ani.setDefaultEasing(Ani.LINEAR);
 
   offScreen = createGraphics(864, 519, JAVA2D);
-
+  
   //// Allow frame to be resized?
   //  if (frame != null) {
   //    frame.setResizable(true);
@@ -253,10 +247,8 @@ void setup()
 
 
   // Button setup
-
   font_ML16  = loadFont("Miso-Light-16.vlw"); 
   font_CB = loadFont("Miso-20.vlw"); 
-
   font_url = loadFont("Zar-casual-16.vlw"); 
 
 
