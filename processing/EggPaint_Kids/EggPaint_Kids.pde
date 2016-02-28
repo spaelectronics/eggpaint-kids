@@ -13,8 +13,6 @@
 
 import de.looksgood.ani.*;
 import processing.serial.*;
-import javax.swing.UIManager;
-import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.ImageIcon;
 import javax.swing.JSlider;
