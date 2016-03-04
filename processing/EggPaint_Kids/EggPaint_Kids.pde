@@ -963,7 +963,7 @@ void mousePressed() {
     };
     
     Object[] options = {"OK", "Restore Defaults", "Cancel"};
-    int option = JOptionPane.showOptionDialog(null, message, "EggPaint Settings", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+    int option = JOptionPane.showOptionDialog(null, message, "EggPaint Settings", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
     if (option == JOptionPane.YES_OPTION)
     {
 
